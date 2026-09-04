@@ -1,1 +1,120 @@
 @import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-display: "Forum", "Georgia", serif;
+  --font-body: "Manrope", "Segoe UI", sans-serif;
+  --font-brush: "Ma Shan Zheng", "Noto Serif SC", cursive;
+  --font-song: "Noto Serif SC", "Ma Shan Zheng", serif;
+
+  /* бумага / тушь / киноварь */
+  --color-paper: #f4f1e8;
+  --color-paper-2: #ece7d9;
+  --color-paper-3: #e3ddcb;
+  --color-ink: #1d1b16;
+  --color-ink-2: #4a463c;
+  --color-ink-3: #8b8474;
+  --color-line: #d8d2bf;
+
+  --color-seal: #c73a2b;
+  --color-seal-2: #a72c1f;
+  --color-seal-3: #8e2318;
+
+  /* ночная тушь */
+  --color-night: #131210;
+  --color-night-2: #1c1a17;
+  --color-night-3: #26231e;
+  --color-mist: #3b372e;
+  --color-bone: #ece5d4;
+  --color-bone-2: #b5ac99;
+  --color-ember: #e24a30;
+}
+
+html, body, #root { height: 100%; }
+
+body {
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
+}
+
+/* ---------- ключевые кадры ---------- */
+
+@keyframes draw-stroke {
+  from { stroke-dashoffset: 100; }
+  to   { stroke-dashoffset: 0; }
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes pop-in {
+  0%   { opacity: 0; transform: scale(0.4); }
+  70%  { transform: scale(1.12); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes stamp-in {
+  0%   { opacity: 0; transform: scale(1.9) rotate(-18deg); }
+  60%  { opacity: 1; transform: scale(0.94) rotate(-8deg); }
+  100% { opacity: 1; transform: scale(1) rotate(-8deg); }
+}
+
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0) rotate(6deg); }
+  50%      { transform: translateY(-22px) rotate(8deg); }
+}
+
+@keyframes pulse-dot {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%      { transform: scale(1.5); opacity: 0.55; }
+}
+
+@keyframes ring-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(199, 58, 43, 0.45); }
+  100% { box-shadow: 0 0 0 12px rgba(199, 58, 43, 0); }
+}
+
+@keyframes bar-grow {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+@keyframes speak-wave {
+  0%, 100% { transform: scaleY(0.4); }
+  50%      { transform: scaleY(1); }
+}
+
+.anim-fade-up   { animation: fade-up 0.45s cubic-bezier(0.22, 0.9, 0.3, 1) both; }
+.anim-fade-in   { animation: fade-in 0.4s ease both; }
+.anim-pop       { animation: pop-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+.anim-stamp     { animation: stamp-in 0.5s cubic-bezier(0.22, 1.2, 0.36, 1) 0.35s both; }
+.anim-float     { animation: float-slow 9s ease-in-out infinite; }
+.anim-ring      { animation: ring-pulse 1.4s ease-out infinite; }
+.anim-bar       { transform-origin: left; animation: bar-grow 0.8s cubic-bezier(0.22, 0.9, 0.3, 1) 0.25s both; }
+
+.stroke-draw {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: draw-stroke 0.7s ease-out forwards;
+}
+
+/* тонкая бумажная фактура */
+.paper-grain {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+}
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { scrollbar-width: none; }
+
+/* кастомный ползунок внутри телефона */
+.app-scroll::-webkit-scrollbar { width: 3px; }
+.app-scroll::-webkit-scrollbar-thumb { background: rgba(139, 132, 116, 0.35); border-radius: 4px; }
