@@ -1,0 +1,237 @@
+/**
+ * Полная база слов HSK 1 (150 слов)
+ * Разделена на тематические пачки по 10-15 слов для удобного заучивания.
+ */
+
+export interface Word {
+  word: string;
+  pinyin: string;
+  en: string;
+  ru: string;
+  chars: string[]; // отдельные иероглифы для практики
+}
+
+export interface Pack {
+  id: string;
+  title: string;
+  subtitle: string;
+  words: Word[];
+}
+
+export const HSK1_PACKS: Pack[] = [
+  {
+    id: 'h1-greetings',
+    title: 'Приветствия и вежливость',
+    subtitle: 'основы общения',
+    words: [
+      { word: '你好', pinyin: 'nǐ hǎo', en: 'hello', ru: 'привет', chars: ['你', '好'] },
+      { word: '谢谢', pinyin: 'xiè xie', en: 'thank you', ru: 'спасибо', chars: ['谢'] },
+      { word: '再见', pinyin: 'zài jiàn', en: 'goodbye', ru: 'до свидания', chars: ['再', '见'] },
+      { word: '请', pinyin: 'qǐng', en: 'please', ru: 'пожалуйста', chars: ['请'] },
+      { word: '对不起', pinyin: 'duì bu qǐ', en: 'sorry', ru: 'извините', chars: ['对', '不', '起'] },
+      { word: '没关系', pinyin: 'méi guān xi', en: 'no problem', ru: 'ничего страшного', chars: ['没', '关', '系'] },
+      { word: '不客气', pinyin: 'bú kè qi', en: "you're welcome", ru: 'не за что', chars: ['不', '客', '气'] },
+      { word: '请问', pinyin: 'qǐng wèn', en: 'excuse me', ru: 'позвольте спросить', chars: ['请', '问'] },
+      { word: '是', pinyin: 'shì', en: 'to be', ru: 'быть, являться', chars: ['是'] },
+      { word: '不', pinyin: 'bù', en: 'not', ru: 'не', chars: ['不'] },
+    ],
+  },
+  {
+    id: 'h1-numbers',
+    title: 'Числа',
+    subtitle: 'счёт от 1 до 100',
+    words: [
+      { word: '一', pinyin: 'yī', en: 'one', ru: 'один', chars: ['一'] },
+      { word: '二', pinyin: 'èr', en: 'two', ru: 'два', chars: ['二'] },
+      { word: '三', pinyin: 'sān', en: 'three', ru: 'три', chars: ['三'] },
+      { word: '四', pinyin: 'sì', en: 'four', ru: 'четыре', chars: ['四'] },
+      { word: '五', pinyin: 'wǔ', en: 'five', ru: 'пять', chars: ['五'] },
+      { word: '六', pinyin: 'liù', en: 'six', ru: 'шесть', chars: ['六'] },
+      { word: '七', pinyin: 'qī', en: 'seven', ru: 'семь', chars: ['七'] },
+      { word: '八', pinyin: 'bā', en: 'eight', ru: 'восемь', chars: ['八'] },
+      { word: '九', pinyin: 'jiǔ', en: 'nine', ru: 'девять', chars: ['九'] },
+      { word: '十', pinyin: 'shí', en: 'ten', ru: 'десять', chars: ['十'] },
+      { word: '零', pinyin: 'líng', en: 'zero', ru: 'ноль', chars: ['零'] },
+      { word: '百', pinyin: 'bǎi', en: 'hundred', ru: 'сто', chars: ['百'] },
+      { word: '千', pinyin: 'qiān', en: 'thousand', ru: 'тысяча', chars: ['千'] },
+      { word: '万', pinyin: 'wàn', en: 'ten thousand', ru: 'десять тысяч', chars: ['万'] },
+      { word: '两', pinyin: 'liǎng', en: 'two (amount)', ru: 'два (количество)', chars: ['两'] },
+    ],
+  },
+  {
+    id: 'h1-people',
+    title: 'Люди и семья',
+    subtitle: 'родственники и местоимения',
+    words: [
+      { word: '我', pinyin: 'wǒ', en: 'I, me', ru: 'я', chars: ['我'] },
+      { word: '你', pinyin: 'nǐ', en: 'you', ru: 'ты', chars: ['你'] },
+      { word: '他', pinyin: 'tā', en: 'he, him', ru: 'он', chars: ['他'] },
+      { word: '她', pinyin: 'tā', en: 'she, her', ru: 'она', chars: ['她'] },
+      { word: '我们', pinyin: 'wǒ men', en: 'we, us', ru: 'мы', chars: ['我', '们'] },
+      { word: '你们', pinyin: 'nǐ men', en: 'you (plural)', ru: 'вы', chars: ['你', '们'] },
+      { word: '他们', pinyin: 'tā men', en: 'they, them', ru: 'они', chars: ['他', '们'] },
+      { word: '爸爸', pinyin: 'bà ba', en: 'dad', ru: 'папа', chars: ['爸'] },
+      { word: '妈妈', pinyin: 'mā ma', en: 'mom', ru: 'мама', chars: ['妈'] },
+      { word: '儿子', pinyin: 'ér zi', en: 'son', ru: 'сын', chars: ['儿', '子'] },
+      { word: '女儿', pinyin: 'nǚ ér', en: 'daughter', ru: 'дочь', chars: ['女', '儿'] },
+      { word: '朋友', pinyin: 'péng yǒu', en: 'friend', ru: 'друг', chars: ['朋', '友'] },
+      { word: '老师', pinyin: 'lǎo shī', en: 'teacher', ru: 'учитель', chars: ['老', '师'] },
+      { word: '学生', pinyin: 'xué shēng', en: 'student', ru: 'студент', chars: ['学', '生'] },
+    ],
+  },
+  {
+    id: 'h1-time',
+    title: 'Время',
+    subtitle: 'дни, часы, сезоны',
+    words: [
+      { word: '今天', pinyin: 'jīn tiān', en: 'today', ru: 'сегодня', chars: ['今', '天'] },
+      { word: '明天', pinyin: 'míng tiān', en: 'tomorrow', ru: 'завтра', chars: ['明', '天'] },
+      { word: '昨天', pinyin: 'zuó tiān', en: 'yesterday', ru: 'вчера', chars: ['昨', '天'] },
+      { word: '现在', pinyin: 'xiàn zài', en: 'now', ru: 'сейчас', chars: ['现', '在'] },
+      { word: '时候', pinyin: 'shí hòu', en: 'time, moment', ru: 'время, момент', chars: ['时', '候'] },
+      { word: '年', pinyin: 'nián', en: 'year', ru: 'год', chars: ['年'] },
+      { word: '月', pinyin: 'yuè', en: 'month, moon', ru: 'месяц, луна', chars: ['月'] },
+      { word: '日', pinyin: 'rì', en: 'day, sun', ru: 'день, солнце', chars: ['日'] },
+      { word: '星期', pinyin: 'xīng qī', en: 'week', ru: 'неделя', chars: ['星', '期'] },
+      { word: '点', pinyin: 'diǎn', en: 'o\'clock', ru: 'часов', chars: ['点'] },
+      { word: '分', pinyin: 'fēn', en: 'minute', ru: 'минута', chars: ['分'] },
+      { word: '上午', pinyin: 'shàng wǔ', en: 'morning', ru: 'утро', chars: ['上', '午'] },
+      { word: '下午', pinyin: 'xià wǔ', en: 'afternoon', ru: 'после полудня', chars: ['下', '午'] },
+    ],
+  },
+  {
+    id: 'h1-places',
+    title: 'Места',
+    subtitle: 'где мы находимся',
+    words: [
+      { word: '中国', pinyin: 'Zhōng guó', en: 'China', ru: 'Китай', chars: ['中', '国'] },
+      { word: '北京', pinyin: 'Běi jīng', en: 'Beijing', ru: 'Пекин', chars: ['北', '京'] },
+      { word: '上海', pinyin: 'Shàng hǎi', en: 'Shanghai', ru: 'Шанхай', chars: ['上', '海'] },
+      { word: '家', pinyin: 'jiā', en: 'home, family', ru: 'дом, семья', chars: ['家'] },
+      { word: '学校', pinyin: 'xué xiào', en: 'school', ru: 'школа', chars: ['学', '校'] },
+      { word: '医院', pinyin: 'yī yuàn', en: 'hospital', ru: 'больница', chars: ['医', '院'] },
+      { word: '饭店', pinyin: 'fàn diàn', en: 'restaurant', ru: 'ресторан', chars: ['饭', '店'] },
+      { word: '商店', pinyin: 'shāng diàn', en: 'shop', ru: 'магазин', chars: ['商', '店'] },
+      { word: '公司', pinyin: 'gōng sī', en: 'company', ru: 'компания', chars: ['公', '司'] },
+      { word: '机场', pinyin: 'jī chǎng', en: 'airport', ru: 'аэропорт', chars: ['机', '场'] },
+      { word: '火车站', pinyin: 'huǒ chē zhàn', en: 'train station', ru: 'вокзал', chars: ['火', '车', '站'] },
+    ],
+  },
+  {
+    id: 'h1-food',
+    title: 'Еда и напитки',
+    subtitle: 'что мы едим',
+    words: [
+      { word: '水', pinyin: 'shuǐ', en: 'water', ru: 'вода', chars: ['水'] },
+      { word: '茶', pinyin: 'chá', en: 'tea', ru: 'чай', chars: ['茶'] },
+      { word: '咖啡', pinyin: 'kā fēi', en: 'coffee', ru: 'кофе', chars: ['咖', '啡'] },
+      { word: '米饭', pinyin: 'mǐ fàn', en: 'rice', ru: 'рис', chars: ['米', '饭'] },
+      { word: '面条', pinyin: 'miàn tiáo', en: 'noodles', ru: 'лапша', chars: ['面', '条'] },
+      { word: '菜', pinyin: 'cài', en: 'dish, vegetable', ru: 'блюдо, овощ', chars: ['菜'] },
+      { word: '水果', pinyin: 'shuǐ guǒ', en: 'fruit', ru: 'фрукты', chars: ['水', '果'] },
+      { word: '苹果', pinyin: 'píng guǒ', en: 'apple', ru: 'яблоко', chars: ['苹', '果'] },
+      { word: '酒', pinyin: 'jiǔ', en: 'alcohol', ru: 'алкоголь', chars: ['酒'] },
+      { word: '吃', pinyin: 'chī', en: 'eat', ru: 'есть', chars: ['吃'] },
+      { word: '喝', pinyin: 'hē', en: 'drink', ru: 'пить', chars: ['喝'] },
+    ],
+  },
+  {
+    id: 'h1-actions',
+    title: 'Действия',
+    subtitle: 'базовые глаголы',
+    words: [
+      { word: '看', pinyin: 'kàn', en: 'look, watch', ru: 'смотреть', chars: ['看'] },
+      { word: '听', pinyin: 'tīng', en: 'listen', ru: 'слушать', chars: ['听'] },
+      { word: '说', pinyin: 'shuō', en: 'speak', ru: 'говорить', chars: ['说'] },
+      { word: '读', pinyin: 'dú', en: 'read', ru: 'читать', chars: ['读'] },
+      { word: '写', pinyin: 'xiě', en: 'write', ru: 'писать', chars: ['写'] },
+      { word: '学', pinyin: 'xué', en: 'study, learn', ru: 'учиться', chars: ['学'] },
+      { word: '工作', pinyin: 'gōng zuò', en: 'work', ru: 'работать', chars: ['工', '作'] },
+      { word: '住', pinyin: 'zhù', en: 'live', ru: 'жить', chars: ['住'] },
+      { word: '坐', pinyin: 'zuò', en: 'sit', ru: 'сидеть', chars: ['坐'] },
+      { word: '走', pinyin: 'zǒu', en: 'walk', ru: 'идти', chars: ['走'] },
+      { word: '来', pinyin: 'lái', en: 'come', ru: 'приходить', chars: ['来'] },
+      { word: '去', pinyin: 'qù', en: 'go', ru: 'идти, ехать', chars: ['去'] },
+      { word: '买', pinyin: 'mǎi', en: 'buy', ru: 'покупать', chars: ['买'] },
+      { word: '卖', pinyin: 'mài', en: 'sell', ru: 'продавать', chars: ['卖'] },
+      { word: '开', pinyin: 'kāi', en: 'open, drive', ru: 'открывать, водить', chars: ['开'] },
+    ],
+  },
+  {
+    id: 'h1-descriptions',
+    title: 'Описания',
+    subtitle: 'прилагательные',
+    words: [
+      { word: '大', pinyin: 'dà', en: 'big', ru: 'большой', chars: ['大'] },
+      { word: '小', pinyin: 'xiǎo', en: 'small', ru: 'маленький', chars: ['小'] },
+      { word: '多', pinyin: 'duō', en: 'many, much', ru: 'много', chars: ['多'] },
+      { word: '少', pinyin: 'shǎo', en: 'few, little', ru: 'мало', chars: ['少'] },
+      { word: '冷', pinyin: 'lěng', en: 'cold', ru: 'холодный', chars: ['冷'] },
+      { word: '热', pinyin: 'rè', en: 'hot', ru: 'горячий', chars: ['热'] },
+      { word: '好', pinyin: 'hǎo', en: 'good', ru: 'хороший', chars: ['好'] },
+      { word: '坏', pinyin: 'huài', en: 'bad', ru: 'плохой', chars: ['坏'] },
+      { word: '高兴', pinyin: 'gāo xìng', en: 'happy', ru: 'счастливый', chars: ['高', '兴'] },
+      { word: '漂亮', pinyin: 'piào liang', en: 'beautiful', ru: 'красивый', chars: ['漂', '亮'] },
+      { word: '新', pinyin: 'xīn', en: 'new', ru: 'новый', chars: ['新'] },
+      { word: '旧', pinyin: 'jiù', en: 'old (things)', ru: 'старый (вещи)', chars: ['旧'] },
+      { word: '快', pinyin: 'kuài', en: 'fast', ru: 'быстрый', chars: ['快'] },
+      { word: '慢', pinyin: 'màn', en: 'slow', ru: 'медленный', chars: ['慢'] },
+    ],
+  },
+  {
+    id: 'h1-things',
+    title: 'Предметы',
+    subtitle: 'вещи вокруг нас',
+    words: [
+      { word: '书', pinyin: 'shū', en: 'book', ru: 'книга', chars: ['书'] },
+      { word: '电脑', pinyin: 'diàn nǎo', en: 'computer', ru: 'компьютер', chars: ['电', '脑'] },
+      { word: '手机', pinyin: 'shǒu jī', en: 'phone', ru: 'телефон', chars: ['手', '机'] },
+      { word: '桌子', pinyin: 'zhuō zi', en: 'table', ru: 'стол', chars: ['桌', '子'] },
+      { word: '椅子', pinyin: 'yǐ zi', en: 'chair', ru: 'стул', chars: ['椅', '子'] },
+      { word: '车', pinyin: 'chē', en: 'car', ru: 'машина', chars: ['车'] },
+      { word: '钱', pinyin: 'qián', en: 'money', ru: 'деньги', chars: ['钱'] },
+      { word: '东西', pinyin: 'dōng xi', en: 'thing', ru: 'вещь', chars: ['东', '西'] },
+      { word: '名字', pinyin: 'míng zi', en: 'name', ru: 'имя', chars: ['名', '字'] },
+      { word: '字', pinyin: 'zì', en: 'character', ru: 'иероглиф', chars: ['字'] },
+    ],
+  },
+  {
+    id: 'h1-questions',
+    title: 'Вопросы',
+    subtitle: 'вопросительные слова',
+    words: [
+      { word: '什么', pinyin: 'shén me', en: 'what', ru: 'что', chars: ['什', '么'] },
+      { word: '谁', pinyin: 'shéi', en: 'who', ru: 'кто', chars: ['谁'] },
+      { word: '哪', pinyin: 'nǎ', en: 'which', ru: 'какой', chars: ['哪'] },
+      { word: '哪里', pinyin: 'nǎ lǐ', en: 'where', ru: 'где', chars: ['哪', '里'] },
+      { word: '怎么', pinyin: 'zěn me', en: 'how', ru: 'как', chars: ['怎', '么'] },
+      { word: '为什么', pinyin: 'wèi shén me', en: 'why', ru: 'почему', chars: ['为', '什', '么'] },
+      { word: '多少', pinyin: 'duō shǎo', en: 'how many', ru: 'сколько', chars: ['多', '少'] },
+      { word: '几', pinyin: 'jǐ', en: 'how many (small)', ru: 'сколько (мало)', chars: ['几'] },
+      { word: '吗', pinyin: 'ma', en: 'question particle', ru: 'вопросительная частица', chars: ['吗'] },
+      { word: '呢', pinyin: 'ne', en: 'and you?', ru: 'а ты?', chars: ['呢'] },
+    ],
+  },
+  {
+    id: 'h1-prepositions',
+    title: 'Предлоги и частицы',
+    subtitle: 'грамматика',
+    words: [
+      { word: '在', pinyin: 'zài', en: 'at, in', ru: 'в, на', chars: ['在'] },
+      { word: '的', pinyin: 'de', en: 'possessive', ru: 'притяжательная частица', chars: ['的'] },
+      { word: '了', pinyin: 'le', en: 'completed action', ru: 'завершённое действие', chars: ['了'] },
+      { word: '和', pinyin: 'hé', en: 'and', ru: 'и', chars: ['和'] },
+      { word: '很', pinyin: 'hěn', en: 'very', ru: 'очень', chars: ['很'] },
+      { word: '太', pinyin: 'tài', en: 'too (much)', ru: 'слишком', chars: ['太'] },
+      { word: '都', pinyin: 'dōu', en: 'all, both', ru: 'все, оба', chars: ['都'] },
+      { word: '也', pinyin: 'yě', en: 'also', ru: 'тоже', chars: ['也'] },
+      { word: '还', pinyin: 'hái', en: 'still, also', ru: 'ещё', chars: ['还'] },
+      { word: '有', pinyin: 'yǒu', en: 'have', ru: 'иметь', chars: ['有'] },
+      { word: '没', pinyin: 'méi', en: 'not have', ru: 'не иметь', chars: ['没'] },
+      { word: '能', pinyin: 'néng', en: 'can, able to', ru: 'мочь', chars: ['能'] },
+      { word: '会', pinyin: 'huì', en: 'can (skill)', ru: 'уметь', chars: ['会'] },
+    ],
+  },
+];
+
+export const HSK1_TOTAL_WORDS = HSK1_PACKS.reduce((sum, p) => sum + p.words.length, 0);

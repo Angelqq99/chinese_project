@@ -1,19 +1,26 @@
 import React, { useEffect, useRef, useState } from 'react';
-import type { CharDef } from '../data/characters';
 import type { Pt } from '../lib/geometry';
-import {
-  drawSmooth, drawPartial, simplify, dist, angleOf, angleDiffDeg,
-  expectedDirectionAt, arcProgress, inferStrokeName, clamp01,
-} from '../lib/geometry';
+import { drawSmooth, drawPartial, simplify, dist, angleOf, angleDiffDeg, expectedDirectionAt, arcProgress, inferStrokeName, clamp01 } from '../lib/geometry';
 import { matchStroke, buildResult, type PracticeResult } from '../lib/matcher';
-import { IconUndo, IconTrash, IconBulb, IconCheck } from '../components/icons';
+import { useProgress } from '../lib/useProgress';
+import { StarRow, IconUndo, IconTrash, IconBulb, IconChevron, IconCheck } from '../components/icons';
 
 interface Props {
-  char: CharDef;
+  char: string;
+  pinyin: string;
+  en: string;
+  ru: string;
+  strokes: Pt[][];
   posLabel: string;
   dark: boolean;
-  onComplete: (r: PracticeResult) => void;
+  onNext: () => void;
+  onHome: () => void;
 }
+
+const COLORS = {
+  light: { grid: '#d5cfba', gridSoft: '#e0dbca', ink: '#1d1b16', bad: '#c73a2b', ghost: '#c73a2b', start: '#8b8474' },
+  dark: { grid: '#38342a', gridSoft: '#2a2721', ink: '#ece5d4', bad: '#e24a30', ghost: '#e24a30', start: '#8f887a' },
+};
 
 interface Sim {
   accepted: Pt[][];
@@ -30,15 +37,8 @@ interface Sim {
   done: boolean;
 }
 
-const COLORS = {
-  light: { grid: '#d5cfba', gridSoft: '#e0dbca', ink: '#1d1b16', bad: '#c73a2b', ghost: '#c73a2b', ghostDim: '#8b8474', start: '#8b8474' },
-  dark: { grid: '#38342a', gridSoft: '#2a2721', ink: '#ece5d4', bad: '#e24a30', ghost: '#e24a30', ghostDim: '#8f887a', start: '#8f887a' },
-};
-
-export function PracticeScreen({ char, posLabel, dark, onComplete }: Props) {
-  const strokes = char.strokes;
+export function PracticeScreen({ char, pinyin, en, ru, strokes, posLabel, dark, onNext, onHome }: Props) {
   const n = strokes.length;
-
   const wrapRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const sim = useRef<Sim>({
@@ -47,12 +47,11 @@ export function PracticeScreen({ char, posLabel, dark, onComplete }: Props) {
   });
   const darkRef = useRef(dark);
   darkRef.current = dark;
-  const onCompleteRef = useRef(onComplete);
-  onCompleteRef.current = onComplete;
 
-  const [ui, setUi] = useState({ count: 0, expected: 0, done: false });
+  const [ui, setUi] = useState({ count: 0, expected: 0, done: false, result: null as PracticeResult | null });
   const [toast, setToast] = useState<{ id: number; msg: string } | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout>>();
+  const { markSeen, setStars } = useProgress();
 
   const say = (msg: string) => {
     setToast({ id: Date.now(), msg });
@@ -63,17 +62,15 @@ export function PracticeScreen({ char, posLabel, dark, onComplete }: Props) {
 
   const syncUi = () => {
     const s = sim.current;
-    setUi({ count: s.accepted.length, expected: s.expected, done: s.done });
+    setUi({ count: s.accepted.length, expected: s.expected, done: s.done, result: null });
   };
 
-  /* ---------- автоматический призрак после двух промахов ---------- */
   const autoGhost = () => {
     const s = sim.current;
     s.ghost = { pts: strokes[s.expected], t0: performance.now() };
     s.autoHints++;
   };
 
-  /* ---------- события указателя ---------- */
   const toPt = (e: React.PointerEvent): Pt => {
     const r = canvasRef.current!.getBoundingClientRect();
     return { x: (e.clientX - r.left) / r.width, y: (e.clientY - r.top) / r.height };
@@ -86,7 +83,6 @@ export function PracticeScreen({ char, posLabel, dark, onComplete }: Props) {
     const p = toPt(e);
     s.live = [p];
     s.arrow = null;
-    // если начали далеко от ожидаемого старта — пульсирующая метка
     const ref0 = strokes[s.expected][0];
     if (dist(p, ref0) > 0.30) {
       s.arrow = { x: ref0.x, y: ref0.y, angle: angleOf(p, ref0), mode: 'start' };
@@ -101,7 +97,6 @@ export function PracticeScreen({ char, posLabel, dark, onComplete }: Props) {
     if (dist(p, lp) < 0.006) return;
     s.live.push(p);
 
-    // мгновенная проверка направления против эталона
     if (s.live.length >= 4 && s.arrow?.mode !== 'start') {
       const ref = strokes[s.expected];
       const a = s.live;
@@ -136,16 +131,16 @@ export function PracticeScreen({ char, posLabel, dark, onComplete }: Props) {
       buzz(verdict.kind === 'perfect' ? 22 : 12);
       if (s.expected >= n) {
         s.done = true;
-        syncUi();
-        setTimeout(() => onCompleteRef.current(
-          buildResult(s.orderErrors, s.scores, s.hints, s.autoHints)), 750);
+        const result = buildResult(s.orderErrors, s.scores, s.hints, s.autoHints);
+        markSeen(char);
+        setStars(char, result.stars);
+        setUi({ count: s.accepted.length, expected: s.expected, done: true, result });
         return;
       }
       syncUi();
       return;
     }
 
-    // ошибка
     s.flash.push({ pts: user, t0: performance.now() });
     buzz(30);
     if (verdict.kind === 'order') {
@@ -166,7 +161,6 @@ export function PracticeScreen({ char, posLabel, dark, onComplete }: Props) {
     syncUi();
   };
 
-  /* ---------- кнопки ---------- */
   const undo = () => {
     const s = sim.current;
     if (!s.accepted.length || s.done) return;
@@ -189,7 +183,6 @@ export function PracticeScreen({ char, posLabel, dark, onComplete }: Props) {
     syncUi();
   };
 
-  /* ---------- цикл отрисовки ---------- */
   useEffect(() => {
     const canvas = canvasRef.current!;
     const wrap = wrapRef.current!;
@@ -216,7 +209,6 @@ export function PracticeScreen({ char, posLabel, dark, onComplete }: Props) {
       const s = sim.current;
       ctx.clearRect(0, 0, size, size);
 
-      /* сетка 米字格 */
       const P = (v: number) => v * size;
       ctx.lineWidth = 1.4;
       ctx.strokeStyle = C.grid;
@@ -236,7 +228,6 @@ export function PracticeScreen({ char, posLabel, dark, onComplete }: Props) {
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
 
-      /* метка ожидаемого старта */
       if (!s.done && s.expected < n) {
         const st = strokes[s.expected][0];
         const pulse = 1 + 0.25 * Math.sin(performance.now() / 260);
@@ -249,7 +240,6 @@ export function PracticeScreen({ char, posLabel, dark, onComplete }: Props) {
         ctx.globalAlpha = 1;
       }
 
-      /* призрак-подсказка */
       if (s.ghost) {
         const dt = performance.now() - s.ghost.t0;
         if (dt < 950) {
@@ -271,12 +261,10 @@ export function PracticeScreen({ char, posLabel, dark, onComplete }: Props) {
         }
       }
 
-      /* принятые черты */
       ctx.strokeStyle = C.ink;
       ctx.lineWidth = P(0.034);
       for (const st of s.accepted) drawSmooth(ctx, toPx(st));
 
-      /* красные вспышки ошибок */
       s.flash = s.flash.filter((f) => performance.now() - f.t0 < 650);
       for (const f of s.flash) {
         const k = 1 - (performance.now() - f.t0) / 650;
@@ -287,14 +275,12 @@ export function PracticeScreen({ char, posLabel, dark, onComplete }: Props) {
         ctx.globalAlpha = 1;
       }
 
-      /* живая черта */
       if (s.live && s.live.length > 1) {
         ctx.strokeStyle = s.arrow?.mode === 'dir' ? C.bad : C.ink;
         ctx.lineWidth = P(0.034);
         drawSmooth(ctx, toPx(s.live));
       }
 
-      /* красная стрелка-подсказка направления */
       if (s.arrow && !s.done) {
         const a = s.arrow;
         const blink = 0.6 + 0.4 * Math.sin(performance.now() / 110);
@@ -329,14 +315,12 @@ export function PracticeScreen({ char, posLabel, dark, onComplete }: Props) {
     };
     raf = requestAnimationFrame(draw);
     return () => { cancelAnimationFrame(raf); ro.disconnect(); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [strokes, n]);
 
   const expName = ui.expected < n ? inferStrokeName(strokes[ui.expected]) : null;
 
   return (
     <div className="flex h-full flex-col px-5 pb-5">
-      {/* контекст */}
       <div className="flex items-center justify-between gap-2 pt-1">
         <span className="truncate text-[12px] font-semibold text-ink-2 dark:text-bone-2">{posLabel}</span>
         <span className="flex shrink-0 items-center gap-1.5 rounded-full border border-line px-2.5 py-1 text-[11px] font-bold text-ink-2 dark:border-mist dark:text-bone-2">
@@ -344,15 +328,17 @@ export function PracticeScreen({ char, posLabel, dark, onComplete }: Props) {
         </span>
       </div>
 
-      {/* пиньинь и перевод — иероглиф скрыт */}
       <div className="mt-2 flex items-end justify-between">
         <div>
-          <div className="font-display text-[38px] leading-none text-ink dark:text-bone">{char.pinyin}</div>
-          <div className="mt-1 text-[14px] font-bold text-seal dark:text-ember">{char.en} <span className="font-medium text-ink-3 dark:text-bone-2">· {char.ru}</span></div>
+          <div className="font-display text-[38px] leading-none text-ink dark:text-bone">{pinyin}</div>
+          <div className="mt-1 text-[14px] font-bold text-seal dark:text-ember">{en} <span className="font-medium text-ink-3 dark:text-bone-2">· {ru}</span></div>
         </div>
         <div key={ui.expected} className="anim-fade-in text-right">
           {ui.done ? (
-            <span className="inline-block rounded-md bg-seal px-2.5 py-1.5 text-[12.5px] font-extrabold text-paper dark:bg-ember dark:text-night">Готово!</span>
+            <div className="anim-pop">
+              <StarRow n={ui.result?.stars || 0} animate size={26} />
+              <p className="mt-1 text-[11px] font-semibold text-ink-3 dark:text-bone-2">Отлично!</p>
+            </div>
           ) : (
             <>
               <div className="text-[12px] font-extrabold text-ink dark:text-bone">Черта {ui.expected + 1} / {n}</div>
@@ -366,7 +352,6 @@ export function PracticeScreen({ char, posLabel, dark, onComplete }: Props) {
         </div>
       </div>
 
-      {/* точки-черты */}
       <div className="mt-2.5 flex items-center gap-1.5">
         {strokes.map((_, i) => (
           <span key={i} className={`h-[7px] flex-1 rounded-full transition-colors duration-300 ${
@@ -376,7 +361,6 @@ export function PracticeScreen({ char, posLabel, dark, onComplete }: Props) {
         ))}
       </div>
 
-      {/* холст */}
       <div className="relative mx-auto mt-3 w-full max-w-[350px] flex-1 min-h-0">
         <div ref={wrapRef} className="relative aspect-square w-full">
           <canvas
@@ -396,7 +380,6 @@ export function PracticeScreen({ char, posLabel, dark, onComplete }: Props) {
         </div>
       </div>
 
-      {/* управление одной рукой — у большого пальца */}
       <div className="mt-3.5">
         <div className="flex gap-2.5">
           <button onClick={undo} disabled={ui.count === 0 || ui.done}
@@ -412,9 +395,11 @@ export function PracticeScreen({ char, posLabel, dark, onComplete }: Props) {
             <IconBulb size={16} /> Подсказка
           </button>
         </div>
-        <p className="mt-2 text-center text-[10.5px] font-semibold text-ink-3 dark:text-bone-2">
-          подсказка ограничивает оценку до ★★ · рисуйте от серой метки
-        </p>
+        {ui.done && (
+          <button onClick={onNext} className="mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-md bg-ink py-3 font-display text-[15px] tracking-wide text-paper transition-all duration-150 hover:bg-ink-2 active:scale-[0.97] dark:bg-bone dark:text-night dark:hover:bg-bone-2">
+            Далее <IconChevron size={16} />
+          </button>
+        )}
       </div>
     </div>
   );

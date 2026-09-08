@@ -66,9 +66,13 @@ export function StrokeGlyph({
             }
             if (i === drawn && animateCurrent) {
               return (
-                <path key={i} d={d} className={`${activeClass} stroke-draw`} stroke="currentColor"
-                  strokeWidth={strokeWidth + 0.6} pathLength={100}
-                  style={{ animationDuration: `${animDuration}ms` }} />
+                <path key={i} d={d} className={activeClass} stroke="currentColor"
+                  strokeWidth={strokeWidth + 0.6}
+                  style={{
+                    strokeDasharray: 100,
+                    strokeDashoffset: 100,
+                    animation: `draw-stroke ${animDuration}ms ease-out forwards`,
+                  }} />
               );
             }
             if (ghost) {

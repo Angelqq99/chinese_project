@@ -48,5 +48,8 @@ export function useProgress() {
 
   const reset = useCallback(() => setProgress({ stars: {}, seen: {} }), []);
 
-  return { progress, effectiveStars, markSeen, setStars, reset };
+  const totalStars = Object.values(progress.stars).reduce((s, n) => s + n, 0) +
+    Object.keys(progress.seen).filter((k) => !progress.stars[k]).length;
+
+  return { progress, starsByChar: progress.stars, effectiveStars, markSeen, setStars, reset, totalStars };
 }
