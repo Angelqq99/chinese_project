@@ -1,32 +1,40 @@
+// src/screens/HomeScreen.tsx
 import React, { useState } from 'react';
 import { LEVELS, levelWordCount, TOTAL_WORDS } from '../data/characters';
-import { useProgress } from '../lib/useProgress';
-import { StarRow, IconChevron, IconWifiOff, IconUndo } from '../components/icons';
+import { useProgress } from '../context/ProgressContext';
+import { StarRow, IconChevron, IconWifiOff, IconUndo, IconDice } from '../components/icons';
 
-interface Props {
-  effectiveStars: number;
-  onReset: () => void;
-  onStart: (levelIdx: number, packIdx: number) => void;
+// Функция для генерации ID (должна совпадать с App.tsx)
+function getCharId(li: number, pi: number, wi: number, ci: number): string {
+  return `l${li}p${pi}w${wi}c${ci}`;
 }
 
-export function HomeScreen({ effectiveStars, onReset, onStart }: Props) {
-  const [expandedLevel, setExpandedLevel] = useState<number | null>(null);
-  const { starsByChar } = useProgress();
+interface Props {
+  onStart: (levelIdx: number, packIdx: number) => void;
+  onStartFree: () => void;
+}
 
-  const totalStars = LEVELS.reduce(
+export function HomeScreen({ onStart, onStartFree }: Props) {
+  const [expandedLevel, setExpandedLevel] = useState<number | null>(null);
+  const { stars, totalStars, reset } = useProgress();
+
+  // Общее максимальное количество звёзд
+  const totalMaxStars = LEVELS.reduce(
     (sum, l) => sum + l.packs.reduce((s, p) => s + p.words.reduce((ss, w) => ss + w.chars.length * 3, 0), 0),
     0
   );
 
   const toggleLevel = (i: number) => setExpandedLevel(expandedLevel === i ? null : i);
 
+  // Прогресс уровня – используем составные ключи
   const levelStars = (li: number) => {
     const level = LEVELS[li];
     let earned = 0;
-    level.packs.forEach((p) => {
-      p.words.forEach((w) => {
-        w.chars.forEach((ch) => {
-          earned += starsByChar[ch] || 0;
+    level.packs.forEach((p, pi) => {
+      p.words.forEach((w, wi) => {
+        w.chars.forEach((_, ci) => {
+          const id = getCharId(li, pi, wi, ci);
+          earned += stars[id] || 0;
         });
       });
     });
@@ -40,7 +48,7 @@ export function HomeScreen({ effectiveStars, onReset, onStart }: Props) {
 
   return (
     <div className="flex h-full flex-col px-5 pb-6">
-      {/* шапка с общей статистикой */}
+      {/* Шапка с общей статистикой */}
       <div className="anim-fade-up pt-2">
         <div className="flex items-baseline justify-between">
           <h1 className="font-display text-[26px] leading-none tracking-wide text-ink dark:text-bone">
@@ -54,30 +62,42 @@ export function HomeScreen({ effectiveStars, onReset, onStart }: Props) {
           <div className="flex-1">
             <div className="mb-1 flex items-center justify-between text-[10.5px] font-bold uppercase tracking-wider text-ink-3 dark:text-bone-2">
               <span>Прогресс</span>
-              <span>{effectiveStars} / {totalStars} ★</span>
+              <span>{totalStars} / {totalMaxStars} ★</span>
             </div>
             <div className="h-2 overflow-hidden rounded-full bg-paper-3 dark:bg-night-3">
               <div
                 className="anim-bar h-full rounded-full bg-gradient-to-r from-seal to-seal-2 dark:from-ember dark:to-seal-2"
-                style={{ width: `${totalStars ? (effectiveStars / totalStars) * 100 : 0}%` }}
+                style={{ width: `${totalMaxStars ? (totalStars / totalMaxStars) * 100 : 0}%` }}
               />
             </div>
           </div>
           <button
-            onClick={onReset}
+            onClick={reset}
             title="Сбросить прогресс"
             className="grid h-9 w-9 place-items-center rounded-md border border-line text-ink-3 transition hover:bg-paper-2 hover:text-seal active:scale-90 dark:border-mist dark:text-bone-2 dark:hover:bg-night-3 dark:hover:text-ember"
           >
             <IconUndo size={16} />
           </button>
         </div>
+
+        {/* Кнопка случайной практики */}
+        <div className="mt-3">
+          <button
+            onClick={onStartFree}
+            className="flex w-full items-center justify-center gap-2 rounded-md border-2 border-dashed border-seal/50 py-2.5 text-[14px] font-bold text-seal transition hover:bg-seal/5 dark:border-ember/50 dark:text-ember dark:hover:bg-ember/5"
+          >
+            <IconDice size={18} />
+            Случайная практика
+          </button>
+        </div>
+
         <div className="mt-2 flex items-center gap-1.5 text-[10.5px] text-ink-3 dark:text-bone-2">
           <IconWifiOff size={11} />
           <span>Офлайн-режим · данные кэшируются</span>
         </div>
       </div>
 
-      {/* список уровней */}
+      {/* Список уровней */}
       <div className="mt-4 flex-1 space-y-2 overflow-y-auto no-scrollbar">
         {LEVELS.map((level, li) => {
           const expanded = expandedLevel === li;
@@ -121,12 +141,19 @@ export function HomeScreen({ effectiveStars, onReset, onStart }: Props) {
                 </div>
               </button>
 
-              {/* раскрытые пачки */}
               {expanded && (
                 <div className="mt-1.5 space-y-1 pl-2">
                   {level.packs.map((pack, pi) => {
-                    const packEarned = pack.words.reduce((s, w) => s + w.chars.reduce((ss, ch) => ss + (starsByChar[ch] || 0), 0), 0);
-                    const packMax = pack.words.reduce((s, w) => s + w.chars.length * 3, 0);
+                    let packEarned = 0;
+                    let packMax = 0;
+                    pack.words.forEach((w, wi) => {
+                      w.chars.forEach((_, ci) => {
+                        const id = getCharId(li, pi, wi, ci);
+                        packEarned += stars[id] || 0;
+                        packMax += 3;
+                      });
+                    });
+
                     return (
                       <button
                         key={pack.id}

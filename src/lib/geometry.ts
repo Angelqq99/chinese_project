@@ -99,6 +99,8 @@ export function simplify(pts: Pt[], eps: number): Pt[] {
     if (dist(last(out), pts[i]) >= eps) out.push(pts[i]);
   }
   out.push(last(pts));
+  // Если после упрощения осталось меньше 2 точек, возвращаем исходные
+  if (out.length < 2) return pts;
   return out;
 }
 

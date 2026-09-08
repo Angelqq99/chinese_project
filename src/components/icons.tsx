@@ -58,6 +58,27 @@ export const IconStar = ({ size = 22, filled = false, ...p }: P & { filled?: boo
     <path d="M12 2.6l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.5l-5.9 3.1 1.2-6.5L2.5 9.5l6.6-.9z" />
   </svg>
 );
+export const IconDice: React.FC<{ size?: number; className?: string }> = ({ size = 20, className = '' }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+    <circle cx="8" cy="8" r="1" />
+    <circle cx="16" cy="8" r="1" />
+    <circle cx="8" cy="16" r="1" />
+    <circle cx="16" cy="16" r="1" />
+    <circle cx="12" cy="12" r="1" />
+  </svg>
+);
 
 export function StarRow({ n, size = 30, animate = false }: { n: number; size?: number; animate?: boolean }) {
   return (

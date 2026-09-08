@@ -1,24 +1,36 @@
+// src/App.tsx
 import React, { useEffect, useState } from 'react';
 import { LEVELS, loadStrokesForPack } from './data/characters';
-import type { Word } from './data/characters';
 import type { Pt } from './lib/geometry';
-import { useProgress } from './lib/useProgress';
+import { ProgressProvider, useProgress } from './context/ProgressContext';
 import { HomeScreen } from './screens/HomeScreen';
-import { PracticeScreen } from './screens/PracticeScreen';
+import PracticeScreen from './screens/PracticeScreen';
+import FreePracticeScreen from './screens/FreePracticeScreen';
 import { IconSun, IconMoon } from './components/icons';
+import { getAllWords, type WordData } from './lib/charUtils';
 
 type Route =
   | { s: 'home' }
-  | { s: 'practice'; li: number; pi: number; wi: number; ci: number; strokesMap: Map<string, Pt[][]> };
+  | { s: 'practice'; li: number; pi: number; wi: number; ci: number; strokesMap: Map<string, Pt[][]> }
+  | { s: 'free' };
 
 const THEME_KEY = 'cherta-theme';
 
-export default function App() {
+function getCharId(li: number, pi: number, wi: number, ci: number): string {
+  return `l${li}p${pi}w${wi}c${ci}`;
+}
+
+function AppContent() {
   const [dark, setDark] = useState<boolean>(() => {
     try { return localStorage.getItem(THEME_KEY) === 'dark'; } catch { return false; }
   });
   const [route, setRoute] = useState<Route>({ s: 'home' });
-  const { totalStars, reset } = useProgress();
+  const { reset, stars } = useProgress();
+  const [allWords, setAllWords] = useState<WordData[]>([]);
+
+  useEffect(() => {
+    getAllWords().then(setAllWords).catch(console.error);
+  }, []);
 
   useEffect(() => {
     try { localStorage.setItem(THEME_KEY, dark ? 'dark' : 'light'); } catch { /* noop */ }
@@ -29,26 +41,63 @@ export default function App() {
   const handleStart = async (li: number, pi: number) => {
     const pack = LEVELS[li].packs[pi];
     const strokesMap = await loadStrokesForPack(pack);
-    setRoute({ s: 'practice', li, pi, wi: 0, ci: 0, strokesMap });
+    let startWi = 0;
+    let startCi = 0;
+    let found = false;
+    for (let wi = 0; wi < pack.words.length; wi++) {
+      const word = pack.words[wi];
+      for (let ci = 0; ci < word.chars.length; ci++) {
+        const id = getCharId(li, pi, wi, ci);
+        if ((stars[id] || 0) < 2) {
+          startWi = wi;
+          startCi = ci;
+          found = true;
+          break;
+        }
+      }
+      if (found) break;
+    }
+    setRoute({
+      s: 'practice',
+      li,
+      pi,
+      wi: startWi,
+      ci: startCi,
+      strokesMap,
+    });
+  };
+
+  const handleStartFree = () => {
+    if (allWords.length === 0) {
+      alert('Слова ещё загружаются, попробуйте позже.');
+      return;
+    }
+    setRoute({ s: 'free' });
   };
 
   const handleNext = () => {
-    if (route.s !== 'practice') return;
-    const pack = LEVELS[route.li].packs[route.pi];
-    const word = pack.words[route.wi];
-    if (route.ci < word.chars.length - 1) {
-      setRoute({ ...route, ci: route.ci + 1 });
-    } else if (route.wi < pack.words.length - 1) {
-      setRoute({ ...route, wi: route.wi + 1, ci: 0 });
-    } else {
-      goHome();
+    if (route.s === 'practice') {
+      const pack = LEVELS[route.li].packs[route.pi];
+      const word = pack.words[route.wi];
+      if (route.ci < word.chars.length - 1) {
+        setRoute({ ...route, ci: route.ci + 1 });
+      } else if (route.wi < pack.words.length - 1) {
+        setRoute({ ...route, wi: route.wi + 1, ci: 0 });
+      } else {
+        goHome();
+      }
     }
+    // Для 'free' handleNext обрабатывается внутри FreePracticeScreen
   };
+
+  const currentCharId = route.s === 'practice'
+    ? getCharId(route.li, route.pi, route.wi, route.ci)
+    : '';
 
   const screen = (() => {
     switch (route.s) {
       case 'home':
-        return <HomeScreen effectiveStars={totalStars} onReset={reset} onStart={handleStart} />;
+        return <HomeScreen onStart={handleStart} onStartFree={handleStartFree} />;
       case 'practice': {
         const pack = LEVELS[route.li].packs[route.pi];
         const word = pack.words[route.wi];
@@ -68,7 +117,9 @@ export default function App() {
         }
         return (
           <PracticeScreen
+            key={currentCharId}
             char={char}
+            charId={currentCharId}
             pinyin={word.pinyin}
             en={word.en}
             ru={word.ru}
@@ -80,6 +131,14 @@ export default function App() {
           />
         );
       }
+      case 'free':
+        return (
+          <FreePracticeScreen
+            words={allWords}
+            dark={dark}
+            onHome={goHome}
+          />
+        );
     }
   })();
 
@@ -95,7 +154,6 @@ export default function App() {
               : 'radial-gradient(58% 44% at 12% 8%, rgba(199,58,43,0.06), transparent 70%), radial-gradient(70% 60% at 92% 96%, rgba(29,27,22,0.05), transparent 70%)',
           }}
         />
-
         <div className="relative z-10 mx-auto flex h-dvh w-full max-w-[432px] flex-col md:py-5">
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden border-line bg-paper shadow-[0_24px_80px_-24px_rgba(29,27,22,0.45)] transition-colors duration-500 dark:bg-night dark:shadow-[0_24px_80px_-24px_rgba(0,0,0,0.9)] md:rounded-[26px] md:border md:border-line dark:md:border-mist">
             <header className="flex items-center justify-between border-b border-line px-4 py-2.5 dark:border-mist">
@@ -118,13 +176,20 @@ export default function App() {
                 {dark ? <IconSun size={17} /> : <IconMoon size={17} />}
               </button>
             </header>
-
-            <main className="app-scroll min-h-0 flex-1 overflow-y-auto" key={JSON.stringify({ ...route, strokesMap: undefined })}>
+            <main className="app-scroll min-h-0 flex-1 overflow-y-auto">
               {screen}
             </main>
           </div>
         </div>
       </div>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <ProgressProvider>
+      <AppContent />
+    </ProgressProvider>
   );
 }

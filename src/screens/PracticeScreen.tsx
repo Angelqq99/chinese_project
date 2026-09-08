@@ -1,12 +1,14 @@
+// src/screens/PracticeScreen.tsx
 import React, { useEffect, useRef, useState } from 'react';
 import type { Pt } from '../lib/geometry';
 import { drawSmooth, drawPartial, simplify, dist, angleOf, angleDiffDeg, expectedDirectionAt, arcProgress, inferStrokeName, clamp01 } from '../lib/geometry';
 import { matchStroke, buildResult, type PracticeResult } from '../lib/matcher';
-import { useProgress } from '../lib/useProgress';
+import { useProgress } from '../context/ProgressContext';
 import { StarRow, IconUndo, IconTrash, IconBulb, IconChevron, IconCheck } from '../components/icons';
 
 interface Props {
   char: string;
+  charId: string;          // <-- уникальный идентификатор позиции символа
   pinyin: string;
   en: string;
   ru: string;
@@ -37,7 +39,7 @@ interface Sim {
   done: boolean;
 }
 
-export function PracticeScreen({ char, pinyin, en, ru, strokes, posLabel, dark, onNext, onHome }: Props) {
+export default function PracticeScreen({ char, charId, pinyin, en, ru, strokes, posLabel, dark, onNext, onHome }: Props) {
   const n = strokes.length;
   const wrapRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -116,6 +118,11 @@ export function PracticeScreen({ char, pinyin, en, ru, strokes, posLabel, dark, 
     const raw = s.live;
     s.live = null;
     const user = simplify(raw, 0.008);
+    const totalLength = user.reduce((sum, p, i) => sum + (i ? dist(user[i - 1], p) : 0), 0);
+    if (totalLength < 0.05) {
+      s.arrow = null;
+      return;
+    }
     if (user.length < 2) { s.arrow = null; return; }
 
     const verdict = matchStroke(user, strokes, s.expected);
@@ -132,8 +139,9 @@ export function PracticeScreen({ char, pinyin, en, ru, strokes, posLabel, dark, 
       if (s.expected >= n) {
         s.done = true;
         const result = buildResult(s.orderErrors, s.scores, s.hints, s.autoHints);
-        markSeen(char);
-        setStars(char, result.stars);
+        // ИСПРАВЛЕНИЕ: используем charId вместо char
+        markSeen(charId);
+        setStars(charId, result.stars);
         setUi({ count: s.accepted.length, expected: s.expected, done: true, result });
         return;
       }
@@ -141,23 +149,29 @@ export function PracticeScreen({ char, pinyin, en, ru, strokes, posLabel, dark, 
       return;
     }
 
+    // --- ОШИБКА ---
     s.flash.push({ pts: user, t0: performance.now() });
     buzz(30);
+    s.fails++;
+
     if (verdict.kind === 'order') {
       s.orderErrors++;
       say(`Порядок нарушен: это черта ${verdict.matchIndex + 1}, а нужна ${s.expected + 1}`);
     } else if (verdict.kind === 'repeat') {
       say(`Черта ${verdict.matchIndex + 1} уже написана`);
     } else if (verdict.kind === 'reversed') {
-      s.fails++;
       say('Не то направление — красная стрелка покажет верное');
       const ref = strokes[s.expected];
       s.arrow = { x: ref[0].x, y: ref[0].y, angle: angleOf(ref[0], ref[ref.length - 1]), mode: 'dir' };
     } else {
-      s.fails++;
       say('Не совпадает с эталоном');
-      if (s.fails >= 2) { autoGhost(); say('Два промаха — показываю подсказку'); }
     }
+
+    if (s.fails >= 2) {
+      autoGhost();
+      say('Два промаха — показываю подсказку');
+    }
+
     syncUi();
   };
 

@@ -79,9 +79,10 @@ const as = (m: CompareResult, kind: StrokeKind, matchIndex: number): StrokeVerdi
 export function compareStroke(user: Pt[], ref: Pt[], index: number): StrokeVerdict {
   const m = comparePointArrays(user, ref);
   if (m.reversed) return as(m, 'reversed', index);
-  if (m.shape >= 0.68 && m.startErr <= 0.20 && m.endErr <= 0.22 && m.dirDeg <= 40)
+  // Увеличиваем допустимые ошибки для perfect и accepted
+  if (m.shape >= 0.65 && m.startErr <= 0.25 && m.endErr <= 0.28 && m.dirDeg <= 45)
     return as(m, 'perfect', index);
-  if (m.shape >= 0.45 && m.startErr <= 0.30 && m.endErr <= 0.34 && m.dirDeg <= 68)
+  if (m.shape >= 0.42 && m.startErr <= 0.35 && m.endErr <= 0.38 && m.dirDeg <= 70)
     return as(m, 'accepted', index);
   return as(m, 'rejected', index);
 }
