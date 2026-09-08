@@ -91,9 +91,7 @@ npm run build
 ## 🙏 Благодарности
 
 * [Make Me a Hanzi](https://github.com/skishore/makemeahanzi) — векторы черт
-* [HSK Official](http://www.chinesetest.cn/) — официальные списки слов
+* [HSK Official](https://github.com/clem109/hsk-vocabulary) — официальные списки слов
 
 # **笔画 ЧЕРТА** — учите китайскую каллиграфию правильно! ✍️
-
-
 
