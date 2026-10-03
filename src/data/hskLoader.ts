@@ -1,7 +1,7 @@
 // src/data/hskLoader.ts
 import type { Level } from './types';
 
-// URL с полным JSON-файлом (замените на свой)
+// URL с полным JSON-файлом 
 const HSK_DATA_URL = 'https://cdn.jsdelivr.net/gh/your-repo/hsk-data/hsk-full.json';
 
 const DB_NAME = 'cherta-hsk-v1';
