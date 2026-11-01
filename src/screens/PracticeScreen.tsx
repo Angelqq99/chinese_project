@@ -4,6 +4,7 @@ import type { Pt } from '../lib/geometry';
 import { drawSmooth, drawPartial, simplify, dist, angleOf, angleDiffDeg, expectedDirectionAt, arcProgress, inferStrokeName, clamp01 } from '../lib/geometry';
 import { matchStroke, buildResult, type PracticeResult } from '../lib/matcher';
 import { useProgress } from '../context/ProgressContext';
+import { buzz } from '../lib/mobile';
 import { StarRow, IconUndo, IconTrash, IconBulb, IconChevron, IconCheck } from '../components/icons';
 
 interface Props {
@@ -43,6 +44,7 @@ export default function PracticeScreen({ char, charId, pinyin, en, ru, strokes, 
   const n = strokes.length;
   const wrapRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const activePointer = useRef<number | null>(null);
   const sim = useRef<Sim>({
     accepted: [], scores: [], expected: 0, live: null, flash: [], ghost: null,
     arrow: null, fails: 0, orderErrors: 0, hints: 0, autoHints: 0, done: false,
@@ -60,7 +62,6 @@ export default function PracticeScreen({ char, charId, pinyin, en, ru, strokes, 
     clearTimeout(toastTimer.current);
     toastTimer.current = setTimeout(() => setToast(null), 1800);
   };
-  const buzz = (ms: number) => { try { navigator.vibrate?.(ms); } catch { /* нет вибро */ } };
 
   const syncUi = () => {
     const s = sim.current;
@@ -80,7 +81,8 @@ export default function PracticeScreen({ char, charId, pinyin, en, ru, strokes, 
 
   const onDown = (e: React.PointerEvent) => {
     const s = sim.current;
-    if (s.done) return;
+    if (s.done || activePointer.current !== null || !e.isPrimary) return;
+    activePointer.current = e.pointerId;
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
     const p = toPt(e);
     s.live = [p];
@@ -93,7 +95,7 @@ export default function PracticeScreen({ char, charId, pinyin, en, ru, strokes, 
 
   const onMove = (e: React.PointerEvent) => {
     const s = sim.current;
-    if (!s.live || s.done) return;
+    if (e.pointerId !== activePointer.current || !s.live || s.done) return;
     const p = toPt(e);
     const lp = s.live[s.live.length - 1];
     if (dist(p, lp) < 0.006) return;
@@ -112,7 +114,9 @@ export default function PracticeScreen({ char, charId, pinyin, en, ru, strokes, 
     }
   };
 
-  const onUp = () => {
+  const onUp = (e: React.PointerEvent) => {
+    if (e.pointerId !== activePointer.current) return;
+    activePointer.current = null;
     const s = sim.current;
     if (!s.live || s.done) return;
     const raw = s.live;
@@ -334,7 +338,7 @@ export default function PracticeScreen({ char, charId, pinyin, en, ru, strokes, 
   const expName = ui.expected < n ? inferStrokeName(strokes[ui.expected]) : null;
 
   return (
-    <div className="flex h-full flex-col px-5 pb-5">
+    <div className="practice-screen flex min-h-full flex-col px-5 pb-5">
       <div className="flex items-center justify-between gap-2 pt-1">
         <span className="truncate text-[12px] font-semibold text-ink-2 dark:text-bone-2">{posLabel}</span>
         <span className="flex shrink-0 items-center gap-1.5 rounded-full border border-line px-2.5 py-1 text-[11px] font-bold text-ink-2 dark:border-mist dark:text-bone-2">
@@ -375,7 +379,7 @@ export default function PracticeScreen({ char, charId, pinyin, en, ru, strokes, 
         ))}
       </div>
 
-      <div className="relative mx-auto mt-3 w-full max-w-[350px] flex-1 min-h-0">
+      <div className="relative mx-auto mt-3 w-full max-w-[350px] shrink-0">
         <div ref={wrapRef} className="relative aspect-square w-full">
           <canvas
             ref={canvasRef}
@@ -384,7 +388,12 @@ export default function PracticeScreen({ char, charId, pinyin, en, ru, strokes, 
             onPointerDown={onDown}
             onPointerMove={onMove}
             onPointerUp={onUp}
-            onPointerCancel={onUp}
+            onPointerCancel={(e) => {
+              if (e.pointerId !== activePointer.current) return;
+              activePointer.current = null;
+              sim.current.live = null;
+              sim.current.arrow = null;
+            }}
           />
           {toast && (
             <div key={toast.id} className="anim-fade-up pointer-events-none absolute left-1/2 top-3 z-10 w-max max-w-[92%] -translate-x-1/2 rounded-md bg-ink/92 px-3 py-1.5 text-center text-[12px] font-bold text-paper shadow-lg dark:bg-bone/95 dark:text-night">

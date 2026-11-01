@@ -8,6 +8,7 @@ import PracticeScreen from './screens/PracticeScreen';
 import FreePracticeScreen from './screens/FreePracticeScreen';
 import { IconSun, IconMoon } from './components/icons';
 import { getAllWords, type WordData } from './lib/charUtils';
+import { useAndroidBack } from './lib/mobile';
 
 type Route =
   | { s: 'home' }
@@ -27,16 +28,31 @@ function AppContent() {
   const [route, setRoute] = useState<Route>({ s: 'home' });
   const { reset, stars } = useProgress();
   const [allWords, setAllWords] = useState<WordData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [retry, setRetry] = useState(0);
 
   useEffect(() => {
-    getAllWords().then(setAllWords).catch(console.error);
-  }, []);
+    let active = true;
+    setLoading(true);
+    setLoadError(false);
+    getAllWords()
+      .then(words => { if (active) setAllWords(words); })
+      .catch(() => { if (active) setLoadError(true); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [retry]);
 
   useEffect(() => {
     try { localStorage.setItem(THEME_KEY, dark ? 'dark' : 'light'); } catch { /* noop */ }
   }, [dark]);
 
   const goHome = () => setRoute({ s: 'home' });
+  useAndroidBack(() => {
+    if (route.s === 'home') return false;
+    goHome();
+    return true;
+  });
 
   const handleStart = async (li: number, pi: number) => {
     const pack = LEVELS[li].packs[pi];
@@ -154,7 +170,7 @@ function AppContent() {
               : 'radial-gradient(58% 44% at 12% 8%, rgba(199,58,43,0.06), transparent 70%), radial-gradient(70% 60% at 92% 96%, rgba(29,27,22,0.05), transparent 70%)',
           }}
         />
-        <div className="relative z-10 mx-auto flex h-dvh w-full max-w-[432px] flex-col md:py-5">
+        <div className="mobile-shell relative z-10 mx-auto flex h-dvh w-full max-w-[432px] flex-col md:py-5">
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden border-line bg-paper shadow-[0_24px_80px_-24px_rgba(29,27,22,0.45)] transition-colors duration-500 dark:bg-night dark:shadow-[0_24px_80px_-24px_rgba(0,0,0,0.9)] md:rounded-[26px] md:border md:border-line dark:md:border-mist">
             <header className="flex items-center justify-between border-b border-line px-4 py-2.5 dark:border-mist">
               <button onClick={goHome} className="group flex items-center gap-2.5">
@@ -177,7 +193,18 @@ function AppContent() {
               </button>
             </header>
             <main className="app-scroll min-h-0 flex-1 overflow-y-auto">
-              {screen}
+              {loading ? (
+                <div role="status" className="flex h-full items-center justify-center px-5 text-center">
+                  Подготавливаем иероглифы…
+                </div>
+              ) : loadError ? (
+                <div role="alert" className="flex h-full flex-col items-center justify-center gap-4 px-5 text-center">
+                  <p>Не удалось загрузить данные для практики.</p>
+                  <button onClick={() => setRetry(value => value + 1)} className="rounded-md bg-seal px-4 py-3 text-paper">
+                    Попробовать снова
+                  </button>
+                </div>
+              ) : screen}
             </main>
           </div>
         </div>
