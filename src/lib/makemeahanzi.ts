@@ -59,7 +59,7 @@ async function fetchGraphics(): Promise<any> {
 		try {
 			return JSON.parse(match[1]);
 		} catch (e) {
-			throw new Error('Ошибка парсинга JSON в старом формате: ' + e.message);
+			throw new Error('Ошибка парсинга JSON в старом формате: ' + (e instanceof Error ? e.message : String(e)));
 		}
 	}
 
@@ -103,7 +103,11 @@ export async function loadMakeMeHanzi(): Promise<any> {
 		await saveToCache(data);
 		cache = data;
 		return data;
-	})();
+	})().catch(error => {
+		// A failed first attempt must not poison subsequent retries.
+		loadingPromise = null;
+		throw error;
+	});
 
 	return loadingPromise;
 }
